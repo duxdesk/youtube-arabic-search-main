@@ -28,3 +28,5 @@ dist-ssr
 .env.development
 .env.test
 .env.production
+.env
+Secure It.env  # If it's a file, ignore it
