@@ -1,0 +1,20 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: 164.92.248.101
+        username: root
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: ~/youtube-arabic-search-main/deploy.sh
