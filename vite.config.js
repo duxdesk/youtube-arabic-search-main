@@ -1,24 +1,31 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc'
+import path from 'path'  // For alias resolution
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    host: true, // For external access
-    port: 4173, // Your preview port
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        // Ensure SPA fallback for all routes
-        manualChunks: undefined,
-      },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),  // Maps @/ to ./src/ (fixes TS2307)
     },
   },
-  // SPA fallback for preview/prod
+  server: {
+    host: true,  // For external access (e.g., http://192.168.0.8:4173)
+    port: 4173,
+  },
   preview: {
     open: true,
     host: true,
     port: 4173,
+  },
+  build: {
+    base: './',  // Relative paths for SPA deployment
+    rollupOptions: {
+      output: {
+        // SPA fallback: Handles all routes via index.html
+        manualChunks: undefined,  // Optional: Keeps it simple
+      },
+    },
   },
 })

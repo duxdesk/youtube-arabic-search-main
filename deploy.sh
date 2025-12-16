@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/youtube-arabic-search-main
+cd ~/Desktop/myapp/youtube-arabic-search-main
 git pull origin main
 npm install
 npm run build
