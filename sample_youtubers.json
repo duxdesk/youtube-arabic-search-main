@@ -1,0 +1,38 @@
+[
+  {
+    "arabic_name": "أحمد سعد زايد",
+    "english_name": "Ahmed Saad Zayed",
+    "description": "قناة معنية بالتنوير الفكري والثقافي",
+    "channel_url": "https://www.youtube.com/@ahmedsaadzayed",
+    "avatar_url": "https://via.placeholder.com/150/FF6B6B/FFFFFF?text=أحمد",
+    "subscriber_count": "500K",
+    "category": "تعليم"
+  },
+  {
+    "arabic_name": "خزعل الماجدي",
+    "english_name": "Khazal Al-Majidi",
+    "description": "باحث في التاريخ والأديان",
+    "channel_url": "https://www.youtube.com/@khazalalmajidi",
+    "avatar_url": "https://via.placeholder.com/150/4ECDC4/FFFFFF?text=خزعل",
+    "subscriber_count": "300K",
+    "category": "تاريخ"
+  },
+  {
+    "arabic_name": "رشيد ايلال",
+    "english_name": "Rachid Aylal",
+    "description": "قناة الفكر الحر",
+    "channel_url": "https://www.youtube.com/@aylalrachid",
+    "avatar_url": "https://via.placeholder.com/150/45B7D1/FFFFFF?text=رشيد",
+    "subscriber_count": "200K",
+    "category": "فكر"
+  },
+  {
+    "arabic_name": "إبراهيم عيسى",
+    "english_name": "Ibrahim Eissa",
+    "description": "كاتب وصحفي ومقدم برامج",
+    "channel_url": "https://www.youtube.com/@ibrahimeissa",
+    "avatar_url": "https://via.placeholder.com/150/96CEB4/FFFFFF?text=إبراهيم",
+    "subscriber_count": "1M",
+    "category": "إعلام"
+  }
+]

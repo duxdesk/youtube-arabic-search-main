@@ -1,0 +1,92 @@
+[
+  {
+    "youtuber_id": "REPLACE_WITH_ACTUAL_ID",
+    "video_title": "الفلسفة الإسلامية في العصر الذهبي",
+    "video_id": "VIDEO_001",
+    "video_url": "https://youtube.com/watch?v=VIDEO_001",
+    "publish_date": "2024-12-11",
+    "duration": "3:04",
+    "timestamps": [
+      {
+        "start_time": 0,
+        "end_time": 51,
+        "text": "في هذا الفيديو نتحدث عن الفلسفة الإسلامية"
+      },
+      {
+        "start_time": 51,
+        "end_time": 105,
+        "text": "العصر الذهبي شهد ازدهاراً كبيراً في الفكر الفلسفي"
+      },
+      {
+        "start_time": 105,
+        "end_time": 136,
+        "text": "ابن رشد والفارابي كانا من أبرز الفلاسفة المسلمين"
+      },
+      {
+        "start_time": 136,
+        "end_time": 184,
+        "text": "الفلسفة الإسلامية أثرت بشكل كبير على الفكر الأوروبي"
+      }
+    ]
+  },
+  {
+    "youtuber_id": "REPLACE_WITH_ACTUAL_ID",
+    "video_title": "تاريخ الحضارات القديمة",
+    "video_id": "VIDEO_002",
+    "video_url": "https://youtube.com/watch?v=VIDEO_002",
+    "publish_date": "2025-01-10",
+    "duration": "4:47",
+    "timestamps": [
+      {
+        "start_time": 0,
+        "end_time": 64,
+        "text": "الحضارات القديمة في بلاد الرافدين"
+      },
+      {
+        "start_time": 64,
+        "end_time": 128,
+        "text": "سومر وبابل كانتا من أقدم الحضارات"
+      },
+      {
+        "start_time": 128,
+        "end_time": 214,
+        "text": "الكتابة المسمارية اختراع سومري عظيم"
+      },
+      {
+        "start_time": 214,
+        "end_time": 287,
+        "text": "الحضارة المصرية القديمة وأسرارها"
+      }
+    ]
+  },
+  {
+    "youtuber_id": "REPLACE_WITH_ACTUAL_ID",
+    "video_title": "الفكر النقدي والتفكير العلمي",
+    "video_id": "VIDEO_003",
+    "video_url": "https://youtube.com/watch?v=VIDEO_003",
+    "publish_date": "2025-02-09",
+    "duration": "3:55",
+    "timestamps": [
+      {
+        "start_time": 0,
+        "end_time": 78,
+        "text": "أهمية التفكير النقدي في حياتنا"
+      },
+      {
+        "start_time": 78,
+        "end_time": 165,
+        "text": "المنهج العلمي في البحث والتحليل"
+      },
+      {
+        "start_time": 165,
+        "end_time": 205,
+        "text": "كيف نميز بين الحقيقة والوهم"
+      },
+      {
+        "start_time": 205,
+        "end_time": 235,
+        "text": "العقل والنقل في التراث الإسلامي"
+      }
+    ]
+  }
+]
