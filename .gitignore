@@ -44,3 +44,6 @@ venv/lib/python3.12/site-packages/triton/_C/libtriton.so
 venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda.so
 venv/lib/python3.12/site-packages/torch/lib/libtorch_cpu.so
 venv/lib/python3.12/site-packages/torch/lib/libtorch_cuda_linalg.so
+venv/
+videos_with_timestamps.csv
+ready_to_uppload_Arnest_videso.json
