@@ -1,0 +1,31 @@
+import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
+import Fuse from "fuse.js";
+
+const Search = () => {
+  const { youtuberId } = useParams();
+  const { data: videos } = useQuery({
+    queryKey: ["videos", youtuberId],
+    queryFn: () => supabase.from("videos").select("*").eq("creator_id", youtuberId).then(r => r.data),
+  });
+
+  const fuse = new Fuse(videos || [], { keys: ["title", "description"], threshold: 0.3 });
+
+  return (
+    <div className="p-4" dir="rtl">
+      <h2 className="text-2xl mb-4">نتائج البحث لـ {youtuberId}</h2>
+      {videos?.map(video => (
+        <Card key={video.id} className="mb-4">
+          <CardContent className="p-4">
+            <h3>{video.title}</h3>
+            <p>{video.description}</p>
+          </CardContent>
+        </Card>
+      )) || <p className="text-muted-foreground">لا توجد نتائج</p>}
+    </div>
+  );
+};
+
+export default Search;

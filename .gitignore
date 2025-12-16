@@ -67,3 +67,4 @@ ready_to_uppload_Arnest_videso.json
 venv/
 node_modules/
 .env
+*.backup
