@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+<<<<<<< HEAD
 // Types matching your actual database structure
 export type Youtuber = {
   id: number;
@@ -15,10 +16,22 @@ export type Youtuber = {
   update_date: string | null;
   created_by_id: string | null;
   created_by: string | null;
+=======
+// Types
+export type Youtuber = {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  avatar: string;
+  subscriber_count: string;
+  category: string;
+  description: string | null;
+>>>>>>> origin/main
   created_at: string;
 };
 
 export type Transcript = {
+<<<<<<< HEAD
   youtuber_id: number;
   video_title: string | null;
   video_url: string | null;
@@ -36,6 +49,15 @@ export type Transcript = {
 const getFullTranscriptText = (timestamps: Transcript['timestamps']): string => {
   if (!timestamps || !Array.isArray(timestamps)) return '';
   return timestamps.map(t => t.text || '').join(' ');
+=======
+  id: string;
+  youtuber_id: string;
+  video_title: string;
+  video_id: string;
+  transcript: string;
+  published_at: string;
+  created_at: string;
+>>>>>>> origin/main
 };
 
 // Fetch all youtubers
@@ -72,6 +94,7 @@ export const useYoutuber = (id: string) => {
   });
 };
 
+<<<<<<< HEAD
 // Fetch transcripts - NOTE: Since transcripts don't have youtuber_id link, we fetch all
 export const useTranscripts = (youtuberId?: string) => {
   return useQuery({
@@ -126,6 +149,23 @@ export const useSearchTranscripts = (searchTerm: string) => {
       }));
     },
     enabled: searchTerm.trim().length > 0,
+=======
+// Fetch transcripts for a youtuber
+export const useTranscripts = (youtuberId: string) => {
+  return useQuery({
+    queryKey: ["transcripts", youtuberId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transcripts")
+        .select("*")
+        .eq("youtuber_id", youtuberId)
+        .order("published_at", { ascending: false });
+      
+      if (error) throw error;
+      return data as Transcript[];
+    },
+    enabled: !!youtuberId,
+>>>>>>> origin/main
   });
 };
 
@@ -133,7 +173,11 @@ export const useSearchTranscripts = (searchTerm: string) => {
 export const useAddYoutuber = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> origin/main
   return useMutation({
     mutationFn: async (youtuber: Omit<Youtuber, "id" | "created_at">) => {
       const { data, error } = await supabase
@@ -166,9 +210,15 @@ export const useAddYoutuber = () => {
 export const useAddTranscript = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+<<<<<<< HEAD
   
   return useMutation({
     mutationFn: async (transcript: Omit<Transcript, "youtuber_id">) => {
+=======
+
+  return useMutation({
+    mutationFn: async (transcript: Omit<Transcript, "id" | "created_at">) => {
+>>>>>>> origin/main
       const { data, error } = await supabase
         .from("transcripts")
         .insert([transcript])

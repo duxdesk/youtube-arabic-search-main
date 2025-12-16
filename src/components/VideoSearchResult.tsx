@@ -3,7 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Video, ChevronDown, ChevronUp, Eye } from "lucide-react";
+<<<<<<< HEAD
 import { Transcript } from "@/lib/local-hooks";
+=======
+import { Transcript } from "@/lib/supabase-hooks";
+>>>>>>> origin/main
 
 interface MatchPosition {
   index: number;
@@ -19,10 +23,16 @@ interface VideoSearchResultProps {
   onPlayVideo: (timestamp?: number) => void;
 }
 
+<<<<<<< HEAD
 // Parse duration string (e.g., "15:30" or "1:23:45") to seconds
 const parseDuration = (duration?: string): number => {
   if (!duration) return 0;
   const parts = duration.split(':').map(Number);
+=======
+// Parse timestamp string (e.g., "1:35" or "12:45") to seconds
+const parseTimestamp = (ts: string): number => {
+  const parts = ts.split(':').map(Number);
+>>>>>>> origin/main
   if (parts.length === 2) {
     return parts[0] * 60 + parts[1];
   } else if (parts.length === 3) {
@@ -31,6 +41,7 @@ const parseDuration = (duration?: string): number => {
   return 0;
 };
 
+<<<<<<< HEAD
 // Get video duration from transcript timestamps or duration field
 const getVideoDuration = (result: Transcript): number => {
   // First, try to get from duration field
@@ -49,10 +60,50 @@ const getVideoDuration = (result: Transcript): number => {
 
   // Fallback: estimate based on transcript length (rough: ~150 chars per 10 seconds)
   return Math.max(600, Math.floor(result.transcript.length / 15));
+=======
+// Extract all timestamps from transcript with their positions
+const extractTimestamps = (transcript: string): { position: number; seconds: number }[] => {
+  // Try multiple patterns to find timestamps
+  // Pattern 1: Timestamps on their own line (e.g., "0:35\n" or "\n1:23:45\n")
+  // Pattern 2: Timestamps anywhere in text
+  const patterns = [
+    /(?:^|\n)(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:\n|$)/gm,
+    /\b(\d{1,2}:\d{2}:\d{2})\b/g, // HH:MM:SS format
+    /(?:^|\s)(\d{1,2}:\d{2})(?:\s|$|\n)/gm, // MM:SS format with boundaries
+  ];
+  
+  const timestamps: { position: number; seconds: number }[] = [];
+  
+  for (const regex of patterns) {
+    let match;
+    while ((match = regex.exec(transcript)) !== null) {
+      const seconds = parseTimestamp(match[1]);
+      // Avoid duplicates
+      if (!timestamps.some(t => Math.abs(t.position - match.index) < 10 && t.seconds === seconds)) {
+        timestamps.push({
+          position: match.index,
+          seconds
+        });
+      }
+    }
+  }
+  
+  // Sort by position
+  timestamps.sort((a, b) => a.position - b.position);
+  
+  return timestamps;
+};
+
+// Estimate video duration based on transcript length (rough estimate: ~150 chars per 10 seconds)
+const estimateTimestampFromPosition = (position: number, totalLength: number, estimatedDuration: number = 600): number => {
+  const percentage = position / totalLength;
+  return Math.floor(percentage * estimatedDuration);
+>>>>>>> origin/main
 };
 
 const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResultProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+<<<<<<< HEAD
   const [expandedContextIndex, setExpandedContextIndex] = useState<number | null>(null);
 
   // Get actual video duration
@@ -79,10 +130,13 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
 
     return contextSegments.map(ts => ts.text).join(' ');
   };
+=======
+>>>>>>> origin/main
 
   // Find all match positions in the transcript with actual timestamps
   const findMatches = (): MatchPosition[] => {
     if (!searchTerm.trim()) return [];
+<<<<<<< HEAD
 
     const matches: MatchPosition[] = [];
     const lowerTerm = searchTerm.toLowerCase();
@@ -143,12 +197,62 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
       }
     }
 
+=======
+    
+    const matches: MatchPosition[] = [];
+    const lowerText = result.transcript.toLowerCase();
+    const lowerTerm = searchTerm.toLowerCase();
+    const totalLength = result.transcript.length;
+    const timestamps = extractTimestamps(result.transcript);
+    
+    let startIndex = 0;
+    let matchIndex = 0;
+    
+    while ((startIndex = lowerText.indexOf(lowerTerm, startIndex)) !== -1) {
+      const position = (startIndex / totalLength) * 100;
+      
+      // Find the nearest timestamp before this match
+      let timestamp = 0;
+      
+      if (timestamps.length > 0) {
+        // Use actual timestamps from transcript
+        for (let i = timestamps.length - 1; i >= 0; i--) {
+          if (timestamps[i].position <= startIndex) {
+            timestamp = timestamps[i].seconds;
+            break;
+          }
+        }
+      } else {
+        // No timestamps found - estimate based on position in transcript
+        // Assume average video is 10 minutes (600 seconds)
+        timestamp = estimateTimestampFromPosition(startIndex, totalLength, 600);
+      }
+      
+      // Get context around the match (50 chars before and after)
+      const contextStart = Math.max(0, startIndex - 50);
+      const contextEnd = Math.min(totalLength, startIndex + searchTerm.length + 50);
+      const context = result.transcript.substring(contextStart, contextEnd);
+      
+      matches.push({
+        index: matchIndex,
+        position,
+        timestamp,
+        text: result.transcript.substring(startIndex, startIndex + searchTerm.length),
+        context: (contextStart > 0 ? '...' : '') + context + (contextEnd < totalLength ? '...' : '')
+      });
+      
+      startIndex += searchTerm.length;
+      matchIndex++;
+    }
+    
+>>>>>>> origin/main
     return matches;
   };
 
   const matches = findMatches();
   const matchCount = matches.length;
 
+<<<<<<< HEAD
   // Format seconds to MM:SS or HH:MM:SS
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -166,6 +270,13 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
 
     const parts = text.split(new RegExp(`(${term})`, 'gi'));
     return parts.map((part, index) =>
+=======
+  const highlightText = (text: string, term: string) => {
+    if (!term.trim()) return text;
+    
+    const parts = text.split(new RegExp(`(${term})`, 'gi'));
+    return parts.map((part, index) => 
+>>>>>>> origin/main
       part.toLowerCase() === term.toLowerCase() ? (
         <mark key={index} className="bg-primary/30 text-primary-foreground font-semibold px-1 rounded">
           {part}
@@ -196,6 +307,7 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span className="font-mono text-xs">#{result.video_id}</span>
+<<<<<<< HEAD
                   {result.duration && (
                     <>
                       <span>•</span>
@@ -207,6 +319,8 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
                       </span>
                     </>
                   )}
+=======
+>>>>>>> origin/main
                 </div>
               </div>
             </div>
@@ -217,6 +331,7 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
 
           {/* Timeline */}
           <div className="space-y-2">
+<<<<<<< HEAD
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span className="text-right">
                 الخط الزمني للنتائج ({matchCount} نتيجة) - اضغط على النقاط للانتقال
@@ -226,11 +341,18 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
               </span>
             </div>
             <div
+=======
+            <p className="text-sm text-muted-foreground text-right">
+              الخط الزمني للنتائج ({matchCount} نتيجة) - اضغط على النقاط للانتقال
+            </p>
+            <div 
+>>>>>>> origin/main
               className="relative h-12 bg-muted/50 rounded-lg cursor-pointer border border-border/50"
               onClick={() => onPlayVideo()}
             >
               {/* Timeline track */}
               <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-1 bg-muted-foreground/20 rounded-full" />
+<<<<<<< HEAD
 
               {/* Time markers */}
               <div className="absolute inset-x-4 top-0 bottom-0 flex justify-between items-end pb-1">
@@ -239,17 +361,28 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
                 <span className="text-[10px] text-muted-foreground/50">{formatTime(videoDuration)}</span>
               </div>
 
+=======
+              
+>>>>>>> origin/main
               {/* Match dots */}
               {matches.map((match, idx) => (
                 <button
                   key={idx}
+<<<<<<< HEAD
                   className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full hover:scale-150 transition-transform hover:ring-2 hover:ring-primary/50 z-10"
+=======
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-foreground rounded-full hover:scale-150 transition-transform hover:bg-primary z-10"
+>>>>>>> origin/main
                   style={{ left: `${4 + (match.position * 0.92)}%` }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleTimelineClick(match.timestamp);
                   }}
+<<<<<<< HEAD
                   title={`${formatTime(match.timestamp)} - ${match.context}`}
+=======
+                  title={match.context}
+>>>>>>> origin/main
                 />
               ))}
             </div>
@@ -273,6 +406,7 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
           {isExpanded && (
             <div className="space-y-3 border-t border-border/50 pt-4">
               {matches.map((match, idx) => (
+<<<<<<< HEAD
                 <div key={idx} className="space-y-2">
                   <button
                     onClick={() => handleTimelineClick(match.timestamp)}
@@ -324,6 +458,22 @@ const VideoSearchResult = ({ result, searchTerm, onPlayVideo }: VideoSearchResul
                     </div>
                   )}
                 </div>
+=======
+                <button
+                  key={idx}
+                  onClick={() => handleTimelineClick(match.timestamp)}
+                  className="w-full text-right rounded-lg bg-muted/30 p-3 hover:bg-muted/50 transition-colors border border-transparent hover:border-primary/30"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="secondary" className="text-xs">
+                      نتيجة {idx + 1}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-card-foreground leading-relaxed">
+                    {highlightText(match.context, searchTerm)}
+                  </p>
+                </button>
+>>>>>>> origin/main
               ))}
             </div>
           )}

@@ -5,13 +5,20 @@ import Sidebar from "@/components/Sidebar";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+<<<<<<< HEAD
 import { useYoutubers, useTranscripts } from "@/lib/local-hooks";
+=======
+import { useYoutubers } from "@/lib/supabase-hooks";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+>>>>>>> origin/main
 import { Link } from "react-router-dom";
 
 const Index = () => {
   const { data: youtubers } = useYoutubers();
   const [searchQuery, setSearchQuery] = useState("");
 
+<<<<<<< HEAD
   // Fetch all transcripts to count per youtuber
   const { data: allTranscripts } = useTranscripts();
 
@@ -26,22 +33,53 @@ const Index = () => {
     });
     return counts;
   }, [allTranscripts]);
+=======
+  // Fetch transcript counts per youtuber
+  const { data: transcriptCounts } = useQuery({
+    queryKey: ['transcript-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transcripts')
+        .select('youtuber_id');
+      
+      if (error) throw error;
+      
+      const counts: Record<string, number> = {};
+      data?.forEach(t => {
+        counts[t.youtuber_id] = (counts[t.youtuber_id] || 0) + 1;
+      });
+      return counts;
+    }
+  });
+>>>>>>> origin/main
 
   const filteredYoutubers = useMemo(() => {
     if (!youtubers) return [];
     if (!searchQuery.trim()) return youtubers;
+<<<<<<< HEAD
 
     const query = searchQuery.toLowerCase();
     return youtubers.filter(y =>
       (y.arabic_name?.toLowerCase() || '').includes(query) ||
       (y.english_name?.toLowerCase() || '').includes(query)
+=======
+    
+    const query = searchQuery.toLowerCase();
+    return youtubers.filter(y => 
+      y.name_ar.toLowerCase().includes(query) || 
+      y.name_en.toLowerCase().includes(query)
+>>>>>>> origin/main
     );
   }, [youtubers, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> origin/main
       <div className="container mx-auto px-4 py-8 flex gap-8">
         <main className="flex-1 max-w-4xl mx-auto">
           {/* Title */}
@@ -68,6 +106,7 @@ const Index = () => {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Stats Summary */}
           {youtubers && youtubers.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -190,6 +229,36 @@ const Index = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                       </div>
+=======
+          {/* YouTubers List */}
+          <div className="space-y-3">
+            {filteredYoutubers.map((youtuber) => (
+              <Link key={youtuber.id} to={`/search/${youtuber.id}`}>
+                <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-border bg-card hover:border-primary/50">
+                  <div className="flex items-center justify-between">
+                    {/* Transcript Count */}
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="font-semibold text-lg">
+                        {transcriptCounts?.[youtuber.id] || 0}
+                      </span>
+                      <FileText className="h-5 w-5" />
+                    </div>
+
+                    {/* Name and Avatar */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <h3 className="font-semibold text-foreground">
+                          {youtuber.name_ar}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {youtuber.name_en}
+                        </p>
+                      </div>
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={youtuber.avatar} alt={youtuber.name_ar} />
+                        <AvatarFallback>{youtuber.name_ar.charAt(0)}</AvatarFallback>
+                      </Avatar>
+>>>>>>> origin/main
                     </div>
                   </div>
                 </Card>
@@ -203,7 +272,11 @@ const Index = () => {
             )}
           </div>
         </main>
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> origin/main
         <Sidebar />
       </div>
     </div>
