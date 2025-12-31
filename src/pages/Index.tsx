@@ -1,21 +1,118 @@
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import { Search, FileText } from "lucide-react";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useYoutubers } from "@/hooks/useYoutubers";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 const Index = () => {
+  const { data: youtubers } = useYoutubers();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch transcript counts per youtuber
+  const { data: transcriptCounts } = useQuery({
+    queryKey: ['transcript-counts'],
+    queryFn: async () => {
+      const data = localStorage.getItem('transcripts_data');
+      const transcripts = data ? JSON.parse(data) : [];
+
+      const counts: Record<string, number> = {};
+      transcripts.forEach((t: any) => {
+        counts[t.youtuber_id] = (counts[t.youtuber_id] || 0) + 1;
+      });
+      return counts;
+    }
+  });
+
+  const filteredYoutubers = useMemo(() => {
+    if (!youtubers) return [];
+    if (!searchQuery.trim()) return youtubers;
+
+    const query = searchQuery.toLowerCase();
+    return youtubers.filter(y =>
+      y.arabic_name.toLowerCase().includes(query) ||
+      y.english_name.toLowerCase().includes(query)
+    );
+  }, [youtubers, searchQuery]);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background" dir="rtl">
-      <h1 className="text-4xl font-bold mb-8">بحث يوتيوب عربي</h1>
-      <div className="flex w-full max-w-md gap-2">
-        <Input placeholder="ابحث عن صانعي محتوى عربي..." />
-        <Button asChild variant="default">
-          <Link to="/search/test">
-            <Search className="h-4 w-4" />
-          </Link>
-        </Button>
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      <div className="container mx-auto px-4 py-8 flex gap-8">
+        <main className="flex-1 max-w-4xl mx-auto">
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+              بحث في محتوى اليوتيوبرز
+            </h1>
+            <p className="text-muted-foreground">
+              اختر يوتيوبر للبحث في محتوى القناة
+            </p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto mb-10">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="ابحث عن يوتيوبر..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 text-lg pr-12 bg-card border-border rounded-full"
+              />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            </div>
+          </div>
+
+          {/* YouTubers List */}
+          <div className="space-y-3">
+            {filteredYoutubers.map((youtuber) => (
+              <Link key={youtuber.id} to={`/search/${youtuber.id}`}>
+                <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-border bg-card hover:border-primary/50">
+                  <div className="flex items-center justify-between">
+                    {/* Transcript Count */}
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="font-semibold text-lg">
+                        {transcriptCounts?.[youtuber.id] || 0}
+                      </span>
+                      <FileText className="h-5 w-5" />
+                    </div>
+
+                    {/* Name and Avatar */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <h3 className="font-semibold text-foreground">
+                          {youtuber.arabic_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {youtuber.english_name}
+                        </p>
+                      </div>
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={youtuber.avatar_url} alt={youtuber.arabic_name} />
+                        <AvatarFallback>{youtuber.arabic_name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+
+            {filteredYoutubers.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                {searchQuery ? `لا توجد نتائج لـ "${searchQuery}"` : 'لا يوجد يوتيوبرز'}
+              </p>
+            )}
+          </div>
+        </main>
+
+        <Sidebar />
       </div>
-      <p className="mt-4 text-muted-foreground">مدعوم بـ Supabase و Fuse.js</p>
     </div>
   );
 };
