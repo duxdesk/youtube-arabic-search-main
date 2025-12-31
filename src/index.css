@@ -151,3 +151,35 @@ All colors MUST be HSL.
     }
   }
 }
+/* Add this to your src/index.css or globals.css */
+
+/* Custom Scrollbar for Search Results */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.4);
+}
+
+/* Firefox scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.2) transparent;
+}
+
+/* Smooth scroll animation */
+@media (prefers-reduced-motion: no-preference) {
+  .scrollbar-thin {
+    scroll-behavior: smooth;
+  }
+}

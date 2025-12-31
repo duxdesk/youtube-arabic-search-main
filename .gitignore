@@ -68,3 +68,6 @@ venv/
 node_modules/
 .env
 *.backup
+
+*storybook.log
+storybook-static

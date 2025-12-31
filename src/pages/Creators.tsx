@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";  // For loading
 

@@ -1,0 +1,79 @@
+import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
+
+export default function SearchPage({ youtuber }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = () => {
+    setIsSearching(true);
+    setTimeout(() => setIsSearching(false), 2000); // Simulate search
+  };
+
+  const handleClear = () => {
+    setSearchTerm("");
+  };
+
+  return (
+    <div className="flex-1 p-6 space-y-6" dir="rtl">
+      {/* Header with Youtuber Profile */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-purple-200">
+        <div className="flex items-center gap-3">
+          <img
+            src={youtuber?.avatar_url || "https://via.placeholder.com/64?text=A"}
+            alt={youtuber?.arabic_name}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{youtuber?.arabic_name}</h1>
+            <p className="text-sm text-gray-500">{youtuber?.english_name}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">Ù‚Ø§Ø¦Ù…Ø©</Button>
+          <Button variant="outline" size="sm">Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª</Button>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Ø§Ø¨Ø­Ø« Ø¹Ù† ÙƒÙ„Ù…Ø© Ø£Ùˆ Ø¬Ù…Ù„Ø© ÙÙŠ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù†ØµÙˆØµ..."
+          className="h-14 pr-14 pl-4 text-lg border-2 border-purple-200 focus:border-purple-400 rounded-2xl shadow-lg bg-white"
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+        />
+        <Button
+          onClick={handleSearch}
+          disabled={!searchTerm.trim() || isSearching}
+          className="absolute left-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl disabled:opacity-50"
+        >
+          {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+        </Button>
+        {searchTerm && (
+          <Button
+            onClick={handleClear}
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        )}
+      </div>
+
+      {/* Main Content Area (Empty/Placeholder as in Image) */}
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-purple-200 p-6">
+        <div className="text-center py-12">
+          <p className="text-gray-500">Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¨Ø­Ø« Ù„Ø¹Ø±Ø¶ Ø§Ù„Ù†ØªØ§Ø¦Ø¬</p>
+        </div>
+      </div>
+    </div>
+  );
+}

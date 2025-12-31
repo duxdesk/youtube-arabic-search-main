@@ -1,16 +1,7 @@
-
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
-const NotFound = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center">
-    <h1 className="text-4xl font-bold mb-4">404 - Not Found</h1>
-    <Link to="/" className="text-blue-500 underline">Go Home</Link>
-  </div>
-);
-
-export default NotFound;
 const NotFound = () => {
   const location = useLocation();
 
@@ -19,13 +10,17 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-gray-600">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 underline hover:text-blue-700">
-          Return to Home
-        </a>
+        <h1 className="mb-4 text-6xl font-bold text-foreground">404</h1>
+        <p className="mb-4 text-xl text-muted-foreground">عذراً! الصفحة غير موجودة</p>
+        <p className="mb-6 text-muted-foreground">Oops! Page not found</p>
+        <Link
+          to="/"
+          className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          العودة للرئيسية / Return to Home
+        </Link>
       </div>
     </div>
   );

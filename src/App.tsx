@@ -10,6 +10,11 @@ import Dashboard from "./pages/Dashboard";
 import Creators from "./pages/Creators";
 import Manage from "./pages/Manage";
 import NotFound from "./pages/NotFound";
+<BrowserRouter future={{ v7_relativeSplatPath: true }}>
+  <Routes>
+    {/* Your routes */}
+  </Routes>
+</BrowserRouter>
 
 const queryClient = new QueryClient();
 
@@ -18,7 +23,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      {/* ADD THE FUTURE FLAG HERE ↓ */}
+      <BrowserRouter future={{ v7_relativeSplatPath: true,v7_startTransition: true }}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/search/:youtuberId" element={<Search />} />

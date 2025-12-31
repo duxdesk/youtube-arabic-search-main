@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,32 +11,30 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find((u: any) => u.username === username && u.password === password);
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في تسجيل الدخول",
-        description: error.message,
-      });
-    } else {
+    if (user) {
+      localStorage.setItem('current_user', username);
       toast({
         title: "تم تسجيل الدخول",
         description: "مرحباً بك!",
       });
-      navigate("/dashboard");
+      navigate("/");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "اسم المستخدم أو كلمة المرور غير صحيحة",
+      });
     }
-
     setLoading(false);
   };
 
@@ -45,34 +42,34 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    if (users.find((u: any) => u.username === username)) {
       toast({
         variant: "destructive",
-        title: "خطأ في التسجيل",
-        description: error.message,
+        title: "خطأ",
+        description: "اسم المستخدم موجود بالفعل",
       });
-    } else {
-      toast({
-        title: "تم التسجيل",
-        description: "يمكنك الآن تسجيل الدخول",
-      });
-      navigate("/dashboard");
+      setLoading(false);
+      return;
     }
 
+    users.push({ username, password, createdAt: new Date().toISOString() });
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    toast({
+      title: "تم التسجيل",
+      description: "يمكنك الآن تسجيل الدخول",
+    });
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-secondary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">لوحة التحكم</CardTitle>
-          <CardDescription>سجل الدخول لإدارة المحتوى</CardDescription>
+          <CardTitle className="text-2xl font-bold">حساب المستخدم</CardTitle>
+          <CardDescription>سجل الدخول أو أنشئ حساب جديد</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
@@ -89,31 +86,21 @@ const Auth = () => {
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="البريد الإلكتروني"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="text-right"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    type="password"
-                    placeholder="كلمة المرور"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="text-right"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-primary"
-                  disabled={loading}
-                >
+                <Input
+                  type="text"
+                  placeholder="اسم المستخدم"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+                <Input
+                  type="password"
+                  placeholder="كلمة المرور"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "جاري التحميل..." : "تسجيل الدخول"}
                 </Button>
               </form>
@@ -121,32 +108,22 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="البريد الإلكتروني"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="text-right"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input
-                    type="password"
-                    placeholder="كلمة المرور"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="text-right"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-primary"
-                  disabled={loading}
-                >
+                <Input
+                  type="text"
+                  placeholder="اسم المستخدم"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+                <Input
+                  type="password"
+                  placeholder="كلمة المرور"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={4}
+                />
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "جاري التحميل..." : "إنشاء حساب"}
                 </Button>
               </form>

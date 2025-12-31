@@ -34,46 +34,82 @@ def convert_youtubers_csv_to_json(csv_file, output_file):
     print(f"✅ Converted {len(youtubers)} YouTubers to {output_file}")
     return youtubers
 
+def parse_time_to_seconds(time_str):
+    """Convert time string (HH:MM:SS or MM:SS) to total seconds"""
+    if not time_str or not isinstance(time_str, str):
+        try:
+            return float(time_str or 0)
+        except:
+            return 0
+            
+    parts = time_str.split(':')
+    try:
+        if len(parts) == 3: # HH:MM:SS
+            return int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+        elif len(parts) == 2: # MM:SS
+            return int(parts[0]) * 60 + int(parts[1])
+        else:
+            return float(time_str)
+    except:
+        return 0
+
 def convert_transcripts_csv_to_json(csv_file, output_file, youtuber_id_map):
-    """Convert Transcripts CSV to JSON format"""
-    transcripts = []
+    """Convert Transcripts CSV to JSON format with support for multiple rows per video"""
+    video_map = {} # Using a map to group multiple rows by video_id
     
     with open(csv_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            # Try to find youtuber_id from the map
+            video_id = row.get('video_id', '')
+            if not video_id:
+                continue
+                
+            # Try to find youtuber_id
             youtuber_id = row.get('youtuber_id', '')
             
-            # Parse timestamps if they exist
-            timestamps = []
-            transcript_text = row.get('transcript', '')
+            # Get text and timestamp - check multiple common column names
+            text = row.get('text', row.get('transcript', row.get('content', '')))
+            start_time_str = row.get('start_time', row.get('start', row.get('timestamp', row.get('time', '0'))))
+            end_time_str = row.get('end_time', row.get('end', '0'))
             
-            # If transcript has timestamp format, try to parse it
-            # Otherwise, create a single timestamp entry
-            if transcript_text:
-                timestamps.append({
-                    "start_time": 0,
-                    "end_time": 0,
-                    "text": transcript_text
+            start_time = parse_time_to_seconds(start_time_str)
+            end_time = parse_time_to_seconds(end_time_str)
+            
+            # Initialize video entry if not exists
+            if video_id not in video_map:
+                video_map[video_id] = {
+                    "youtuber_id": youtuber_id,
+                    "video_title": row.get('video_title', ''),
+                    "video_id": video_id,
+                    "video_url": row.get('video_url', f"https://youtube.com/watch?v={video_id}"),
+                    "publish_date": row.get('publish_date', ''),
+                    "duration": row.get('duration', ''),
+                    "timestamps": []
+                }
+            
+            # Add timestamp segment
+            if text:
+                video_map[video_id]["timestamps"].append({
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "text": text
                 })
-            
-            transcript = {
-                "youtuber_id": youtuber_id,
-                "video_title": row.get('video_title', ''),
-                "video_id": row.get('video_id', ''),
-                "video_url": row.get('video_url', ''),
-                "publish_date": row.get('publish_date', ''),
-                "duration": row.get('duration', ''),
-                "timestamps": timestamps
-            }
-            
-            if transcript['youtuber_id'] and transcript['video_id']:
-                transcripts.append(transcript)
+    
+    # Sort timestamps for each video and create final list
+    transcripts = []
+    for video_id in video_map:
+        video = video_map[video_id]
+        # Sort by start_time
+        video["timestamps"].sort(key=lambda x: x["start_time"])
+        
+        # Only add if we have at least one valid youtuber_id and video_id
+        if video['youtuber_id']:
+            transcripts.append(video)
     
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(transcripts, f, ensure_ascii=False, indent=2)
     
-    print(f"✅ Converted {len(transcripts)} Transcripts to {output_file}")
+    print(f"✅ Converted {len(transcripts)} videos (from multiple rows) to {output_file}")
     return transcripts
 
 def main():

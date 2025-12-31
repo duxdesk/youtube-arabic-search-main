@@ -19,36 +19,21 @@ interface YouTubePlayerProps {
 // Extract video ID from YouTube URL or return as-is if already an ID
 const extractVideoId = (url: string): string => {
   if (!url) return '';
-<<<<<<< HEAD
-
-  // If it's already just an ID (11 characters, alphanumeric with - and _)
-  if (/^[\w-]{11}$/.test(url)) return url;
-
-=======
   
   // If it's already just an ID (11 characters, alphanumeric with - and _)
   if (/^[\w-]{11}$/.test(url)) return url;
   
->>>>>>> origin/main
   // Extract from various YouTube URL formats
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
     /v=([^&\s]+)/,
   ];
-<<<<<<< HEAD
-
-=======
   
->>>>>>> origin/main
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
   }
-<<<<<<< HEAD
-
-=======
   
->>>>>>> origin/main
   return url;
 };
 
@@ -56,7 +41,10 @@ const YouTubePlayer = ({ videoId, results = [], currentIndex = 0, totalMatchesCo
   const totalResults = results.length;
   const currentResult = results[currentIndex];
   const actualVideoId = videoId ? extractVideoId(videoId) : '';
-
+  
+  // Create the embed URL with timestamp if provided
+  const embedUrl = actualVideoId ? `https://www.youtube.com/embed/${actualVideoId}?autoplay=1${startTime !== undefined ? `&start=${Math.floor(startTime)}` : ''}` : '';
+  
   const handlePrevious = () => {
     if (onNavigate && currentIndex > 0) {
       onNavigate(currentIndex - 1);
@@ -72,21 +60,12 @@ const YouTubePlayer = ({ videoId, results = [], currentIndex = 0, totalMatchesCo
   return (
     <div className="fixed bottom-4 left-4 w-80 z-50">
       <div className="bg-amber-50 rounded-xl shadow-lg border border-border/50 overflow-hidden">
-<<<<<<< HEAD
         {actualVideoId ? (
           <iframe
-            key={`${actualVideoId}-${Math.floor(startTime || 0)}`}
+            key={`${actualVideoId}-${startTime || 0}`}
             width="100%"
             height="180"
-            src={`https://www.youtube.com/embed/${actualVideoId}?autoplay=1${startTime !== undefined ? `&start=${Math.floor(startTime)}` : ''}`}
-=======
-      {actualVideoId ? (
-          <iframe
-            key={`${actualVideoId}-${startTime}`}
-            width="100%"
-            height="180"
-            src={`https://www.youtube.com/embed/${actualVideoId}?autoplay=1${startTime !== undefined ? `&start=${startTime}` : ''}`}
->>>>>>> origin/main
+            src={embedUrl}
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -100,11 +79,7 @@ const YouTubePlayer = ({ videoId, results = [], currentIndex = 0, totalMatchesCo
             </div>
           </div>
         )}
-<<<<<<< HEAD
-
-=======
         
->>>>>>> origin/main
         {/* Player Controls Section */}
         <div className="p-4 space-y-3 bg-amber-50">
           {/* Header */}
@@ -132,19 +107,11 @@ const YouTubePlayer = ({ videoId, results = [], currentIndex = 0, totalMatchesCo
                   التالي
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-<<<<<<< HEAD
-
-                <span className="font-mono text-sm font-medium text-foreground px-3">
-                  {currentIndex + 1} / {totalMatchesCount || totalResults}
-                </span>
-
-=======
                 
                 <span className="font-mono text-sm font-medium text-foreground px-3">
                   {currentIndex + 1} / {totalMatchesCount || totalResults}
                 </span>
                 
->>>>>>> origin/main
                 <Button
                   variant="outline"
                   size="sm"

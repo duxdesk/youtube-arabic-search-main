@@ -1,0 +1,20 @@
+src/
+├── App.tsx                      # Main App component
+├── main.tsx                     # Entry point
+├── Manage.tsx                   # Manage page component
+├── lib/
+│   ├── supabase.js              # Supabase client
+│   ├── supabase-hooks.ts        # Supabase hooks
+│   ├── local-storage.ts         # Local storage utils
+│   ├── local-hooks.ts           # Local hooks (your useYoutubers.ts might be here!)
+│   └── utils.ts                 # Utilities
+├── pages/                       # Your page components
+│   ├── Index.tsx                # Homepage
+│   ├── Manage.tsx               # Manage page
+│   ├── Creators.tsx             # Creators page
+│   ├── Search.tsx               # Search page
+│   ├── Dashboard.tsx            # Dashboard
+│   ├── Auth.tsx                 # Auth page
+│   └── NotFound.tsx             # 404 page
+└── data/
+    └── youtubers.ts             # Youtuber data

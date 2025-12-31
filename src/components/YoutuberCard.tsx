@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Search } from "lucide-react";
-import { Youtuber } from "@/lib/supabase-hooks";
+import { Youtuber } from "@/lib/local-hooks";
 
 interface YoutuberCardProps {
   youtuber: Youtuber;

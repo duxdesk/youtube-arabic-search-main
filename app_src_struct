@@ -1,0 +1,68 @@
+src/
+├── 📄 App files (multiple versions - needs cleanup)
+│   ├── App.tsx          ⭐ (Main - TypeScript)
+│   ├── App.jsx          
+│   ├── App.js           
+│   └── App.css
+│
+├── 📄 Entry Point
+│   ├── main.tsx         ⭐ (Vite entry)
+│   └── index.css
+│
+├── 📂 components/
+│   ├── admin/
+│   │   ├── AdminLogin.tsx
+│   │   ├── AdminLogout.tsx
+│   │   └── ProtectedRoute.tsx
+│   │
+│   ├── ui/ (shadcn/ui components - 50+ components)
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── input.tsx
+│   │   ├── table.tsx
+│   │   ├── tabs.tsx
+│   │   └── ... (45+ more)
+│   │
+│   └── Feature Components
+│       ├── AuthDialog.tsx
+│       ├── ErrorBoundary.tsx
+│       ├── Header.tsx
+│       ├── Layout.js
+│       ├── SavedSearches.tsx
+│       ├── SearchResult.tsx
+│       ├── Sidebar.tsx
+│       ├── VideoSearchResult.tsx
+│       ├── YouTubePlayer.tsx
+│       └── YoutuberCard.tsx
+│
+├── 📂 pages/
+│   ├── Index.tsx        (Home/Landing)
+│   ├── Search.tsx       (Search interface)
+│   ├── Creators.tsx     (YouTubers list)
+│   ├── Dashboard.tsx    ⭐ (Bulk import - what we saw)
+│   ├── Manage.tsx       (Management interface)
+│   ├── Auth.tsx         (Authentication)
+│   └── NotFound.tsx     (404 page)
+│
+├── 📂 pages.backup/     (Old versions - consider removing)
+│   └── ... (same files as pages/)
+│
+├── 📂 hooks/
+│   ├── useAuth.ts
+│   ├── useSavedSearches.ts
+│   ├── useYoutubers.ts
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+│
+├── 📂 lib/
+│   ├── supabase.js          (Supabase client)
+│   ├── supabase-hooks.ts    (Supabase utilities)
+│   ├── local-storage.ts     (Local storage utilities)
+│   ├── local-hooks.ts       (Local data hooks)
+│   ├── admin-config.ts      (Admin configuration)
+│   ├── useAdminAuth.ts      (Admin auth hook)
+│   └── utils.ts             (General utilities)
+│
+└── 📂 data/
+    └── youtubers.ts         (YouTubers data/types)

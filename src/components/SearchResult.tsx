@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Video, Calendar, Play } from "lucide-react";
-import { Transcript } from "@/lib/supabase-hooks";
+import { Transcript } from "@/lib/local-hooks";
 
 interface SearchResultProps {
   result: Transcript;

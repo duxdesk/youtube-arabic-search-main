@@ -1,6 +1,5 @@
-<<<<<<< HEAD
 import { useState } from "react";
-import { Home, Scissors, Upload, Settings, Mail, Copy, Check } from "lucide-react";
+import { Home, Upload, Settings, Mail, Copy, Check } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -11,26 +10,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-=======
-import { Home, Scissors, Upload, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
->>>>>>> origin/main
 
 const menuItems = [
   { title: "الرئيسية", icon: Home, path: "/" },
-  { title: "منشئ الفيديوهات القصيرة", icon: Scissors, path: "/creators" },
   { title: "رفع البيانات", icon: Upload, path: "/dashboard" },
-<<<<<<< HEAD
   { title: "إدارة البيانات", icon: Settings, path: "/manage" },
-=======
-  { title: "إدارة النصوص", icon: Settings, path: "/manage" },
->>>>>>> origin/main
 ];
 
 const Sidebar = () => {
   const location = useLocation();
-<<<<<<< HEAD
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -38,11 +26,9 @@ const Sidebar = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-=======
->>>>>>> origin/main
 
   return (
-    <aside className="w-64 shrink-0 hidden lg:block">
+    <aside className="w-64 shrink-0">
       <nav className="sticky top-8 space-y-2">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -62,7 +48,6 @@ const Sidebar = () => {
             </Link>
           );
         })}
-<<<<<<< HEAD
 
         <Dialog>
           <DialogTrigger asChild>
@@ -102,8 +87,6 @@ const Sidebar = () => {
             </div>
           </DialogContent>
         </Dialog>
-=======
->>>>>>> origin/main
       </nav>
     </aside>
   );
