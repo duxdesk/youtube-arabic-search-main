@@ -76,3 +76,4 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 Test auto-deploy line
 >>>>>>> origin/main
 # youtube-arabic-search-main
+# my_server
