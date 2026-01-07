@@ -1,69 +1,41 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { db, type Youtuber, type Transcript } from "../db";
 
-// Types
-export type Youtuber = {
-  id: string;
-  arabic_name: string;
-  english_name: string;
-  avatar_url: string;
-  subscriber_count: string;
-  category: string;
-  description: string;
-  created_at: string;
-  rank?: number;
-};
-
-export type Transcript = {
-  id: string;
-  youtuber_id: string;
-  video_title: string;
-  video_id: string;
-  transcript: string;
-  published_at: string;
-  created_at: string;
-  timestamps?: Array<{
-    start_time: number;
-    end_time: number;
-    text: string;
-  }>;
-};
-
-// Local storage keys
-const YOUTUBERS_KEY = 'youtubers_data';
-const TRANSCRIPTS_KEY = 'transcripts_data';
-
-// Helper functions for local storage
-const getYoutubersFromStorage = (): Youtuber[] => {
-  const data = localStorage.getItem(YOUTUBERS_KEY);
-  return data ? JSON.parse(data) : [];
-};
-
-const saveYoutubersToStorage = (youtubers: Youtuber[]) => {
-  localStorage.setItem(YOUTUBERS_KEY, JSON.stringify(youtubers));
-};
-
-const getTranscriptsFromStorage = (): Transcript[] => {
-  const data = localStorage.getItem(TRANSCRIPTS_KEY);
-  return data ? JSON.parse(data) : [];
-};
-
-const saveTranscriptsToStorage = (transcripts: Transcript[]) => {
-  localStorage.setItem(TRANSCRIPTS_KEY, JSON.stringify(transcripts));
-};
-
-// Generate unique ID
+// Helper: Generate unique ID (Preserved from original logic)
 const generateId = () => {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 };
 
-// Fetch all youtubers
+// --- HOOKS ---
+
+/**
+ * Fetch all YouTubers and calculate transcript counts for each.
+ * This ensures the home page shows the number of uploaded files.
+ */
 export const useYoutubers = () => {
   return useQuery({
     queryKey: ["youtubers"],
     queryFn: async () => {
-      const youtubers = getYoutubersFromStorage();
-      // Sort by rank (lower numbers first, undefined/0 at the end)
-      return youtubers.sort((a, b) => {
+      // 1. Fetch all YouTubers from IndexedDB
+      const youtubers = await db.youtubers.toArray();
+      
+      // 2. Attach the count of transcripts for each YouTuber
+      const youtubersWithCounts = await Promise.all(
+        youtubers.map(async (y) => {
+          const count = await db.transcripts
+            .where('youtuber_id')
+            .equals(y.id)
+            .count();
+          
+          return {
+            ...y,
+            transcript_count: count
+          };
+        })
+      );
+
+      // 3. Sort by rank (lower numbers first, undefined at the end)
+      return youtubersWithCounts.sort((a, b) => {
         const rankA = a.rank || 999999;
         const rankB = b.rank || 999999;
         return rankA - rankB;
@@ -72,185 +44,110 @@ export const useYoutubers = () => {
   });
 };
 
-// Fetch single youtuber
+/**
+ * Fetch a single YouTuber by ID
+ */
 export const useYoutuber = (id: string) => {
   return useQuery({
     queryKey: ["youtuber", id],
-    queryFn: async () => {
-      const youtubers = getYoutubersFromStorage();
-      return youtubers.find(y => y.id === id);
-    },
+    queryFn: async () => db.youtubers.get(id),
     enabled: !!id,
   });
 };
 
-// Fetch transcripts for a youtuber
+/**
+ * Fetch transcripts specifically for one YouTuber
+ */
 export const useTranscripts = (youtuberId: string) => {
   return useQuery({
     queryKey: ["transcripts", youtuberId],
-    queryFn: async () => {
-      const transcripts = getTranscriptsFromStorage();
-      return transcripts.filter(t => t.youtuber_id === youtuberId);
-    },
+    queryFn: async () => db.transcripts.where('youtuber_id').equals(youtuberId).toArray(),
     enabled: !!youtuberId,
   });
 };
 
-// Add youtuber - Old version (deprecated, kept for compatibility)
-export const addYoutuber = (queryClient: any) => {
-  return useMutation({
-    mutationFn: async (youtuber: Omit<Youtuber, "id" | "created_at">) => {
-      const youtubers = getYoutubersFromStorage();
-      const newYoutuber: Youtuber = {
-        ...youtuber,
-        id: generateId(),
-        created_at: new Date().toISOString(),
-      };
-      youtubers.push(newYoutuber);
-      saveYoutubersToStorage(youtubers);
-      return newYoutuber;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["youtubers"] });
-    },
-  });
-};
-
-// Add youtuber - New version (hook style)
+/**
+ * Add a single YouTuber manually
+ */
 export const useAddYoutuber = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (youtuber: Omit<Youtuber, "id" | "created_at">) => {
-      const youtubers = getYoutubersFromStorage();
       const newYoutuber: Youtuber = {
         ...youtuber,
         id: generateId(),
         created_at: new Date().toISOString(),
       };
-      youtubers.push(newYoutuber);
-      saveYoutubersToStorage(youtubers);
+      await db.youtubers.add(newYoutuber);
       return newYoutuber;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["youtubers"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["youtubers"] }),
   });
 };
 
-// Add transcript
-export const addTranscript = (queryClient: any) => {
-  return useMutation({
-    mutationFn: async (transcript: Omit<Transcript, "id" | "created_at">) => {
-      const transcripts = getTranscriptsFromStorage();
-      const newTranscript: Transcript = {
-        ...transcript,
-        id: generateId(),
-        created_at: new Date().toISOString(),
-      };
-      transcripts.push(newTranscript);
-      saveTranscriptsToStorage(transcripts);
-      return newTranscript;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transcripts"] });
-    },
-  });
-};
-
-// Bulk add transcripts - Async function
-export const bulkAddTranscripts = async (transcripts: Omit<Transcript, "id" | "created_at">[]) => {
-  const existingTranscripts = getTranscriptsFromStorage();
-  const newTranscripts = transcripts.map(t => ({
-    ...t,
-    id: generateId(),
-    created_at: new Date().toISOString(),
-  }));
-  saveTranscriptsToStorage([...existingTranscripts, ...newTranscripts]);
-  return newTranscripts;
-};
-
-// Bulk add transcripts - Hook version
-// Bulk add transcripts - Hook version
+/**
+ * Bulk add transcripts (Used for large JSON uploads)
+ */
 export const useBulkAddTranscripts = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (transcripts: Omit<Transcript, "id" | "created_at">[]) => {
-      const existingTranscripts = getTranscriptsFromStorage();
       const newTranscripts = transcripts.map(t => ({
-        ...t,  // This spreads ALL properties including timestamps!
+        ...t,
         id: generateId(),
         created_at: new Date().toISOString(),
-      }));
-      saveTranscriptsToStorage([...existingTranscripts, ...newTranscripts]);
+      })) as Transcript[];
+      
+      await db.transcripts.bulkAdd(newTranscripts);
       return newTranscripts;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transcripts"] });
       queryClient.invalidateQueries({ queryKey: ["all-transcripts"] });
+      queryClient.invalidateQueries({ queryKey: ["youtubers"] }); // Refresh counts on home page
     },
   });
 };
 
-// Bulk add youtubers - Async function
-export const bulkAddYoutubers = async (youtubers: Omit<Youtuber, "id" | "created_at">[]) => {
-  const existingYoutubers = getYoutubersFromStorage();
-  const newYoutubers = youtubers.map(y => ({
-    ...y,
-    id: generateId(),
-    created_at: new Date().toISOString(),
-  }));
-  saveYoutubersToStorage([...existingYoutubers, ...newYoutubers]);
-  return newYoutubers;
-};
-
-// Bulk add youtubers - Hook version
+/**
+ * Bulk add YouTubers
+ */
 export const useBulkAddYoutubers = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (youtubers: Omit<Youtuber, "id" | "created_at">[]) => {
-      const existingYoutubers = getYoutubersFromStorage();
       const newYoutubers = youtubers.map(y => ({
         ...y,
         id: generateId(),
         created_at: new Date().toISOString(),
-      }));
-      saveYoutubersToStorage([...existingYoutubers, ...newYoutubers]);
+      })) as Youtuber[];
+      
+      await db.youtubers.bulkAdd(newYoutubers);
       return newYoutubers;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["youtubers"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["youtubers"] }),
   });
 };
 
-// Get all transcripts
+/**
+ * Fetch every transcript in the database
+ */
 export const useAllTranscripts = () => {
   return useQuery({
     queryKey: ["all-transcripts"],
-    queryFn: async () => {
-      return getTranscriptsFromStorage();
-    },
+    queryFn: async () => db.transcripts.toArray(),
   });
 };
 
-// Delete youtuber
+/**
+ * Delete a YouTuber and all their associated transcripts
+ */
 export const useDeleteYoutuber = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (id: string) => {
-      const youtubers = getYoutubersFromStorage();
-      const updated = youtubers.filter(y => y.id !== id);
-      saveYoutubersToStorage(updated);
-      
-      // Also delete associated transcripts
-      const transcripts = getTranscriptsFromStorage();
-      const updatedTranscripts = transcripts.filter(t => t.youtuber_id !== id);
-      saveTranscriptsToStorage(updatedTranscripts);
-      
+      await db.youtubers.delete(id);
+      await db.transcripts.where('youtuber_id').equals(id).delete();
       return id;
     },
     onSuccess: () => {
@@ -261,74 +158,52 @@ export const useDeleteYoutuber = () => {
   });
 };
 
-
-
-// Delete transcript
+/**
+ * Delete a specific transcript by its ID
+ */
 export const useDeleteTranscript = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (id: string) => {
-      const transcripts = getTranscriptsFromStorage();
-      const updated = transcripts.filter(t => t.id !== id);
-      saveTranscriptsToStorage(updated);
+      await db.transcripts.delete(id);
       return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transcripts"] });
       queryClient.invalidateQueries({ queryKey: ["all-transcripts"] });
+      queryClient.invalidateQueries({ queryKey: ["youtubers"] }); // Refresh counts
     },
   });
 };
 
-// Delete all transcripts for a youtuber
+/**
+ * Delete all transcripts for a specific YouTuber
+ */
 export const useDeleteAllTranscripts = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (youtuberId: string) => {
-      const transcripts = getTranscriptsFromStorage();
-      const updated = transcripts.filter(t => t.youtuber_id !== youtuberId);
-      saveTranscriptsToStorage(updated);
+      await db.transcripts.where('youtuber_id').equals(youtuberId).delete();
       return youtuberId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transcripts"] });
       queryClient.invalidateQueries({ queryKey: ["all-transcripts"] });
+      queryClient.invalidateQueries({ queryKey: ["youtubers"] }); // Refresh counts
     },
   });
 };
-// update rank
+
+/**
+ * Update the display rank of a YouTuber
+ */
 export const useUpdateYoutuberRank = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async ({ id, rank }: { id: string; rank: number }) => {
-      console.log('🔥 useUpdateYoutuberRank called:', { id, rank });
-      
-      const youtubers = getYoutubersFromStorage();
-      console.log('📦 Current youtubers:', youtubers.length);
-      
-      const updated = youtubers.map(y => 
-        y.id === id ? { ...y, rank: rank } : y
-      );
-      
-      saveYoutubersToStorage(updated);
-      console.log('✅ Saved to storage');
-      
-      // Immediately update the cache
-      queryClient.setQueryData(["youtubers"], updated);
-      
+      await db.youtubers.update(id, { rank });
       return { id, rank };
     },
-    onSuccess: () => {
-      console.log('✅ Mutation success');
-      queryClient.invalidateQueries({ queryKey: ["youtubers"] });
-    },
-    onError: (error) => {
-      console.error('❌ Mutation error:', error);
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["youtubers"] }),
   });
 };
-
-

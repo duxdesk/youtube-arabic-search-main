@@ -14,7 +14,7 @@ export const ADMIN_CONFIG = {
   PROTECTED_ROUTES: ['/manage', '/dashboard', '/settings'],
   
   // Allowed IPs (optional, for additional security)
-  ALLOWED_IPS: ['127.0.0.1', 'localhost'] // Add your IPs here
+  ALLOWED_IPS: ['127.0.0.1', 'localhost','164.90.226.1'] // Add your IPs here
 };
 
 // Helper to hash passwords (client-side hashing)

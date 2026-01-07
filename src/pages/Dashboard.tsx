@@ -7,11 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileJson, Upload, AlertTriangle, Info, Users, FileText, Download, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { 
-  useYoutubers, 
-  useAddYoutuber,  
-  useBulkAddTranscripts,  
-  useBulkAddYoutubers  
+import {
+  useYoutubers,
+  useAddYoutuber,
+  useBulkAddTranscripts,
+  useBulkAddYoutubers
 } from "@/hooks/useYoutubers";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
@@ -38,7 +38,7 @@ const Dashboard = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [isImportingYoutubers, setIsImportingYoutubers] = useState(false);
   const { toast } = useToast();
-  
+
   // Updated hook usage
   const addYoutubersMutation = useAddYoutuber();
   const bulkAddTranscriptsMutation = useBulkAddTranscripts();
@@ -70,167 +70,50 @@ const Dashboard = () => {
   };
 
   // Replace your handleBulkImport function in Dashboard.tsx with this improved version
-// This adds file size validation, localStorage checking, and batch processing
-
-const handleBulkImport = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!jsonFile) {
-    toast({
-      title: "خطأ",
-      description: "يرجى تحميل ملف JSON",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  // Check file size (50MB maximum - will warn but allow)
-  const fileSizeMB = jsonFile.size / 1024 / 1024;
-  
-  if (fileSizeMB > 50) {
-    toast({
-      title: "ملف كبير جداً",
-      description: `حجم الملف ${fileSizeMB.toFixed(2)} MB. الحد الأقصى الموصى به 50 MB.`,
-      variant: "destructive",
-    });
-    return;
-  }
-
-  // Check current localStorage usage
-  let currentStorageSize = 0;
-  try {
-    for (let key in localStorage) {
-      currentStorageSize += (localStorage[key]?.length || 0);
-    }
-    const currentSizeMB = currentStorageSize / 1024 / 1024;
-    
-    // Warn if storage is getting full (most browsers have 5-10MB limit)
-    if (currentSizeMB > 4) {
-      toast({
-        title: "⚠️ تحذير: التخزين شبه ممتلئ",
-        description: `الاستخدام الحالي: ${currentSizeMB.toFixed(2)} MB. قد تواجه مشاكل إذا تجاوز 5-10 MB.`,
-      });
+  // This adds file size validation, localStorage checking, and batch processing
+  const handleBulkImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jsonFile) {
+      toast({ title: "خطأ", description: "يرجى تحميل ملف JSON", variant: "destructive" });
+      return;
     }
 
-    console.log(`Current storage: ${currentSizeMB.toFixed(2)} MB, File size: ${fileSizeMB.toFixed(2)} MB`);
-  } catch (err) {
-    console.warn("Could not check storage:", err);
-  }
-
-  setIsImporting(true);
-
-  try {
-    const fileContent = await jsonFile.text();
-    const transcripts = JSON.parse(fileContent);
-
-    if (!Array.isArray(transcripts)) {
-      throw new Error("الملف يجب أن يحتوي على مصفوفة من النصوص");
-    }
-
-    const transcriptsToInsert = [];
-    let skippedCount = 0;
-
-    for (const item of transcripts) {
-      try {
-        const youtuber = youtubers?.find(y => y.id === item.youtuber_id);
-
-        if (!youtuber) {
-          console.warn(`YouTuber not found for ID: ${item.youtuber_id}`);
-          skippedCount++;
-          continue;
-        }
-
-        // Combine all timestamp texts for searching
-        const transcriptText = item.timestamps
-          ?.map((ts: any) => ts.text)
-          .join(' ') || item.content || item.transcript || '';
-
-        transcriptsToInsert.push({
-          youtuber_id: item.youtuber_id,
-          video_title: item.video_title,
-          video_id: item.video_id,
-          transcript: transcriptText,
-          published_at: item.publish_date || new Date().toISOString(),
-          timestamps: item.timestamps || [], // KEEP the original timestamps!
-        });
-      } catch (err) {
-        console.error("Error processing item:", err);
-        skippedCount++;
-      }
-    }
-
-    if (transcriptsToInsert.length === 0) {
-      throw new Error("لم يتم العثور على نصوص صالحة للاستيراد");
-    }
-
-    // Process in batches to avoid overwhelming localStorage
-    const BATCH_SIZE = 100; // Increased from 50 to 100 for faster processing
-    let processedCount = 0;
+    setIsImporting(true);
 
     try {
-      for (let i = 0; i < transcriptsToInsert.length; i += BATCH_SIZE) {
-        const batch = transcriptsToInsert.slice(i, i + BATCH_SIZE);
-        
-        try {
-          await bulkAddTranscriptsMutation.mutateAsync(batch);
-          processedCount += batch.length;
-          
-          // Show progress for large imports
-          if (transcriptsToInsert.length > BATCH_SIZE) {
-            toast({
-              title: "جاري الاستيراد...",
-              description: `${processedCount} من ${transcriptsToInsert.length} (${((processedCount/transcriptsToInsert.length)*100).toFixed(0)}%)`,
-            });
-          }
-        } catch (batchError: any) {
-          // If a batch fails due to storage, try to continue with smaller batches
-          if (batchError?.name === 'QuotaExceededError' || 
-              batchError?.message?.includes('quota') ||
-              batchError?.message?.includes('storage')) {
-            
-            console.warn(`Storage limit hit at ${processedCount} items. Stopping import.`);
-            throw new Error(`تم الوصول لحد التخزين! تم حفظ ${processedCount} من ${transcriptsToInsert.length} نص. قم بحذف بيانات قديمة أو استخدم ملفات أصغر.`);
-          }
-          throw batchError;
-        }
-      }
-    } catch (storageError: any) {
-      // Already handled in inner catch, just re-throw
-      throw storageError;
+      const fileContent = await jsonFile.text();
+      const transcripts = JSON.parse(fileContent);
+
+      const transcriptsToInsert = transcripts.map((item: any) => ({
+        youtuber_id: item.youtuber_id,
+        video_title: item.video_title,
+        video_id: item.video_id,
+        transcript: item.timestamps?.map((ts: any) => ts.text).join(' ') || item.content || '',
+        published_at: item.publish_date || new Date().toISOString(),
+        timestamps: item.timestamps || [],
+      }));
+
+      // This now saves to IndexedDB (Capacity: Gigabytes)
+      await bulkAddTranscriptsMutation.mutateAsync(transcriptsToInsert);
+
+      toast({
+        title: "اكتمل الاستيراد ✓",
+        description: `تم حفظ ${transcriptsToInsert.length} نص بنجاح.`,
+      });
+
+      setJsonFile(null);
+    } catch (error) {
+      toast({
+        title: "خطأ في الاستيراد",
+        description: "فشل الحفظ في قاعدة البيانات الكبيرة.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
     }
+  };
 
-    queryClient.invalidateQueries({ queryKey: ["transcripts"] });
-
-    // Show summary
-    let message = `تم إدراج ${processedCount} نص وصفي بنجاح`;
-    if (skippedCount > 0) {
-      message += `\nتم تخطي ${skippedCount} عنصر (YouTuber غير موجود)`;
-    }
-
-    toast({
-      title: "اكتمل الاستيراد ✓",
-      description: message,
-    });
-
-    setJsonFile(null);
-
-    // Show final storage usage
-    let finalSize = 0;
-    for (let key in localStorage) {
-      finalSize += (localStorage[key]?.length || 0);
-    }
-    console.log(`Storage after import: ${(finalSize / 1024 / 1024).toFixed(2)} MB`);
-
-  } catch (error) {
-    console.error("Import error:", error);
-    toast({
-      title: "خطأ في الاستيراد",
-      description: error instanceof Error ? error.message : "حدث خطأ أثناء استيراد النصوص",
-      variant: "destructive",
-    });
-  } finally {
-    setIsImporting(false);
-  }
-};
+  
   const handleBulkYoutuberImport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!youtuberFile) {

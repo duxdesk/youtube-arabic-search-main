@@ -6,27 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useYoutubers } from "@/hooks/useYoutubers";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { data: youtubers } = useYoutubers();
+  // The useYoutubers hook now calculates transcript_count automatically
+  const { data: youtubers, isLoading } = useYoutubers();
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Fetch transcript counts per youtuber
-  const { data: transcriptCounts } = useQuery({
-    queryKey: ['transcript-counts'],
-    queryFn: async () => {
-      const data = localStorage.getItem('transcripts_data');
-      const transcripts = data ? JSON.parse(data) : [];
-
-      const counts: Record<string, number> = {};
-      transcripts.forEach((t: any) => {
-        counts[t.youtuber_id] = (counts[t.youtuber_id] || 0) + 1;
-      });
-      return counts;
-    }
-  });
 
   const filteredYoutubers = useMemo(() => {
     if (!youtubers) return [];
@@ -39,13 +24,20 @@ const Index = () => {
     );
   }, [youtubers, searchQuery]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-lg">جاري تحميل البيانات...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Header />
 
       <div className="container mx-auto px-4 py-8 flex gap-8">
         <main className="flex-1 max-w-4xl mx-auto">
-          {/* Title */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
               بحث في محتوى اليوتيوبرز
@@ -55,7 +47,6 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Search Bar */}
           <div className="max-w-xl mx-auto mb-10">
             <div className="relative">
               <Input
@@ -69,21 +60,19 @@ const Index = () => {
             </div>
           </div>
 
-          {/* YouTubers List */}
           <div className="space-y-3">
             {filteredYoutubers.map((youtuber) => (
               <Link key={youtuber.id} to={`/search/${youtuber.id}`}>
                 <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-border bg-card hover:border-primary/50">
                   <div className="flex items-center justify-between">
-                    {/* Transcript Count */}
+                    {/* Updated to use the count from our database hook */}
                     <div className="flex items-center gap-2 text-primary">
                       <span className="font-semibold text-lg">
-                        {transcriptCounts?.[youtuber.id] || 0}
+                        {youtuber.transcript_count || 0}
                       </span>
                       <FileText className="h-5 w-5" />
                     </div>
 
-                    {/* Name and Avatar */}
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <h3 className="font-semibold text-foreground">
@@ -95,7 +84,7 @@ const Index = () => {
                       </div>
                       <Avatar className="h-12 w-12">
                         <AvatarImage src={youtuber.avatar_url} alt={youtuber.arabic_name} />
-                        <AvatarFallback>{youtuber.arabic_name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{youtuber.arabic_name?.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </div>
                   </div>
@@ -110,7 +99,6 @@ const Index = () => {
             )}
           </div>
         </main>
-
         <Sidebar />
       </div>
     </div>

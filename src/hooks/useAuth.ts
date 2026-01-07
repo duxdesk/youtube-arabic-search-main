@@ -1,17 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://164.90.226.1:5000';
+
 interface User {
+  id: number;
   username: string;
-  password: string;
-  createdAt: string;
+  isAdmin: boolean;
 }
 
 interface AuthState {
-  currentUser: string | null;
-  users: User[];
-  login: (username: string, password: string) => boolean;
-  register: (username: string, password: string) => boolean;
+  currentUser: User | null;
+  token: string | null;
+  login: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoggedIn: () => boolean;
 }
@@ -20,42 +22,61 @@ export const useAuth = create<AuthState>()(
   persist(
     (set, get) => ({
       currentUser: null,
-      users: [],
+      token: null,
       
-      register: (username: string, password: string) => {
-        const { users } = get();
-        
-        if (users.find(u => u.username === username)) {
+      register: async (username: string, password: string) => {
+        try {
+          const response = await fetch(`${API_URL}/api/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (response.ok) {
+            return true;
+          }
+          
+          return false;
+        } catch (error) {
+          console.error('Register error:', error);
           return false;
         }
-        
-        const newUser: User = {
-          username,
-          password,
-          createdAt: new Date().toISOString(),
-        };
-        
-        set({ users: [...users, newUser] });
-        return true;
       },
       
-      login: (username: string, password: string) => {
-        const { users } = get();
-        const user = users.find(u => u.username === username && u.password === password);
-        
-        if (user) {
-          set({ currentUser: username });
-          return true;
+      login: async (username: string, password: string) => {
+        try {
+          const response = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            set({ 
+              currentUser: data.user,
+              token: data.token 
+            });
+            return true;
+          }
+          
+          return false;
+        } catch (error) {
+          console.error('Login error:', error);
+          return false;
         }
-        return false;
       },
       
       logout: () => {
-        set({ currentUser: null });
+        set({ currentUser: null, token: null });
       },
       
       isLoggedIn: () => {
-        return get().currentUser !== null;
+        return get().currentUser !== null && get().token !== null;
       },
     }),
     {
@@ -63,3 +84,12 @@ export const useAuth = create<AuthState>()(
     }
   )
 );
+
+// Helper function to get auth headers for API calls
+export const getAuthHeaders = () => {
+  const token = useAuth.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
