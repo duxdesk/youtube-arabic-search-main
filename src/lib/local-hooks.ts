@@ -1,20 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import * as LocalStorage from "./local-storage";
+import * as API from "./api-client";
 
-export type Youtuber = LocalStorage.Youtuber;
-export type Transcript = LocalStorage.Transcript;
-export type SavedSearch = LocalStorage.SavedSearch;
+export type Youtuber = API.Youtuber;
+export type Transcript = API.Transcript;
+export type SavedSearch = API.SavedSearch;
 
 // Fetch all youtubers
 export const useYoutubers = () => {
     return useQuery({
         queryKey: ["youtubers"],
-        queryFn: async () => {
-            // Simulate async operation
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return LocalStorage.getAllYoutubers();
-        },
+        queryFn: API.getAllYoutubers,
     });
 };
 
@@ -23,8 +19,7 @@ export const useYoutuber = (id: string) => {
     return useQuery({
         queryKey: ["youtuber", id],
         queryFn: async () => {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            const youtuber = LocalStorage.getYoutuberById(id);
+            const youtuber = await API.getYoutuberById(id);
             if (!youtuber) throw new Error("Youtuber not found");
             return youtuber;
         },
@@ -37,11 +32,10 @@ export const useTranscripts = (youtuberId?: string) => {
     return useQuery({
         queryKey: ["transcripts", youtuberId],
         queryFn: async () => {
-            await new Promise(resolve => setTimeout(resolve, 100));
             if (youtuberId) {
-                return LocalStorage.getTranscriptsByYoutuberId(youtuberId);
+                return API.getTranscriptsByYoutuberId(youtuberId);
             }
-            return LocalStorage.getAllTranscripts();
+            return API.getAllTranscripts();
         },
     });
 };
@@ -50,10 +44,7 @@ export const useTranscripts = (youtuberId?: string) => {
 export const useSearchTranscripts = (searchTerm: string, youtuberId?: string) => {
     return useQuery({
         queryKey: ["search-transcripts", searchTerm, youtuberId],
-        queryFn: async () => {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            return LocalStorage.searchTranscripts(searchTerm, youtuberId);
-        },
+        queryFn: () => API.searchTranscripts(searchTerm, youtuberId),
         enabled: searchTerm.trim().length > 0,
     });
 };
@@ -65,8 +56,9 @@ export const useAddYoutuber = () => {
 
     return useMutation({
         mutationFn: async (youtuber: Omit<Youtuber, "id" | "created_at">) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return LocalStorage.addYoutuber(youtuber);
+            const result = await API.addYoutuber(youtuber);
+            if (!result) throw new Error("Failed to add youtuber");
+            return result;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["youtubers"] });
@@ -92,8 +84,9 @@ export const useBulkAddYoutubers = () => {
 
     return useMutation({
         mutationFn: async (youtubers: Array<Omit<Youtuber, "id" | "created_at">>) => {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            return LocalStorage.bulkAddYoutubers(youtubers);
+            const success = await API.bulkAddYoutubers(youtubers as any);
+            if (!success) throw new Error("Failed to bulk add youtubers");
+            return youtubers;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["youtubers"] });
@@ -119,8 +112,7 @@ export const useDeleteYoutuber = () => {
 
     return useMutation({
         mutationFn: async (id: string) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const success = LocalStorage.deleteYoutuber(id);
+            const success = await API.deleteYoutuber(id);
             if (!success) throw new Error("Failed to delete");
             return id;
         },
@@ -142,16 +134,15 @@ export const useDeleteYoutuber = () => {
     });
 };
 
-// Update youtuber rank
+// Update youtuber rank - Note: This endpoint doesn't exist in backend yet
 export const useUpdateYoutuberRank = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
     return useMutation({
         mutationFn: async ({ id, rank }: { id: string; rank: number }) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const success = LocalStorage.updateYoutuberRank(id, rank);
-            if (!success) throw new Error("Failed to update rank");
+            // TODO: Add backend endpoint for updating rank
+            console.warn("Update rank endpoint not implemented yet");
             return { id, rank };
         },
         onSuccess: () => {
@@ -178,8 +169,7 @@ export const useDeleteTranscript = () => {
 
     return useMutation({
         mutationFn: async (id: string) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const success = LocalStorage.deleteTranscript(id);
+            const success = await API.deleteTranscript(id);
             if (!success) throw new Error("Failed to delete");
             return id;
         },
@@ -207,9 +197,10 @@ export const useDeleteAllTranscripts = () => {
 
     return useMutation({
         mutationFn: async (youtuberId: string) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const success = LocalStorage.deleteTranscriptsByYoutuberId(youtuberId);
-            if (!success) throw new Error("Failed to delete");
+            // Delete all transcripts for this youtuber
+            const transcripts = await API.getTranscriptsByYoutuberId(youtuberId);
+            const deletePromises = transcripts.map(t => API.deleteTranscript(t.id));
+            await Promise.all(deletePromises);
             return youtuberId;
         },
         onSuccess: () => {
@@ -236,8 +227,9 @@ export const useAddTranscript = () => {
 
     return useMutation({
         mutationFn: async (transcript: Omit<Transcript, "id">) => {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return LocalStorage.addTranscript(transcript);
+            const result = await API.addTranscript(transcript);
+            if (!result) throw new Error("Failed to add transcript");
+            return result;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["transcripts"] });
@@ -263,8 +255,9 @@ export const useBulkAddTranscripts = () => {
 
     return useMutation({
         mutationFn: async (transcripts: Array<Omit<Transcript, "id">>) => {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            return LocalStorage.bulkAddTranscripts(transcripts);
+            const success = await API.bulkAddTranscripts(transcripts as any);
+            if (!success) throw new Error("Failed to bulk add transcripts");
+            return transcripts;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["transcripts"] });
@@ -287,10 +280,7 @@ export const useBulkAddTranscripts = () => {
 export const useSavedSearches = (youtuberId: string) => {
     return useQuery({
         queryKey: ["saved-searches", youtuberId],
-        queryFn: async () => {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            return LocalStorage.getSavedSearches(youtuberId);
-        },
+        queryFn: API.getSavedSearches,
         enabled: !!youtuberId,
     });
 };
@@ -300,8 +290,9 @@ export const useAddSavedSearch = () => {
 
     return useMutation({
         mutationFn: async ({ youtuberId, searchTerm }: { youtuberId: string; searchTerm: string }) => {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            return LocalStorage.addSavedSearch(youtuberId, searchTerm);
+            const result = await API.addSavedSearch(searchTerm);
+            if (!result) throw new Error("Failed to save search");
+            return result;
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["saved-searches", variables.youtuberId] });
@@ -314,8 +305,7 @@ export const useDeleteSavedSearch = () => {
 
     return useMutation({
         mutationFn: async (id: string) => {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            const success = LocalStorage.deleteSavedSearch(id);
+            const success = await API.deleteSavedSearch(id);
             if (!success) throw new Error("Failed to delete");
             return id;
         },
